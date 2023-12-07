@@ -61,7 +61,7 @@ double MaxNorm(const std::vector<double>& v)
 
 double Sign(double n)
 {
-    return n > 0 ? 1. : -1.;
+    return n >= 0. ? 1. : -1.;
 }
 
 std::vector<double> operator/ (const std::vector<double>& v, double s)
