@@ -40,3 +40,8 @@ std::ostream& operator << (std::ostream& stream, const std::vector<float>& vecto
 
     return stream;
 }
+
+int sgn(double value)
+{
+    return value < 0. ? -1 : 1;
+}

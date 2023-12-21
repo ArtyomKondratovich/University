@@ -9,3 +9,5 @@ std::vector<std::vector<float>> operator* (const std::vector<std::vector<float>>
 std::ostream& operator << (std::ostream&, const std::vector<std::vector<float>>&);
 
 std::ostream& operator << (std::ostream&, const std::vector<float>&);
+
+int sgn(double);

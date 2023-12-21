@@ -5,6 +5,8 @@
 
 const int n = 4;
 const float epsilon = (float)std::pow(10, -8);
+const double border = 1E-6;
+const std::vector<float> frobenius = { -51.61526489f, -61.52075195f, 14011.79687500f, 3981367.25000000f };
 
 static float GetRandomFromRange(float a, float b)
 {
@@ -41,7 +43,6 @@ static float Trace(const std::vector<std::vector<float>>& matrix)
     return trace;
 }
 
-
 static std::vector<std::vector<float>> GenerateE()
 {
     std::vector<std::vector<float>> e(n, std::vector<float>(n));
@@ -65,7 +66,6 @@ static std::vector<std::vector<float>> InverseMatrixM(const std::vector<std::vec
 
     return e;
 }
-
 
 static std::vector<std::vector<float>> MatrixM(const std::vector<std::vector<float>>& a, float leading, int i)
 {
@@ -157,33 +157,77 @@ static std::vector<std::vector<float>> Solve()
     return frobenius;
 }
 
-static std::vector<float> GetPlambda(const std::vector<std::vector<float>>& frobenius)
+static std::vector<float> GetPlambda()
 {
     std::vector<float> p_lambda(n + 1);
-    p_lambda[n] = 1.f;
+    p_lambda[0] = 1.f;
 
-    for (int i = n - 1; i >= 0; i--)
+    for (int i = 0; i < frobenius.size(); i++)
     {
-        p_lambda[i] = -frobenius[0][n - 1 - i];
+        p_lambda[i + 1] = -frobenius[i];
     }
 
     return p_lambda;
 }
 
-static std::vector<float> TakeDerivative(const std::vector<float>& polinom)
+static double CountPlambda(double x0, const std::vector<float>& pLambda)
 {
-    int k = polinom.size() - 1;
+    double result = 0.;
 
-    if (k <= 0)
+    for (size_t i = 0; i < pLambda.size(); i++)
     {
-        return std::vector<float>(0);
+        result += pLambda[i] * std::pow(x0, pLambda.size() - 1 - i);
     }
 
-    std::vector<float> derivative(k);
+    return result;
+}
 
-    for (int i = derivative.size() - 1; i >= 0; i--)
+static int DichotomyMethod(double x0, double x1, double& x, const std::vector<float>& pLambda) {
+    int rotation;
+    if (sgn(CountPlambda(x0, pLambda)) < 0 && sgn(CountPlambda(x1, pLambda)) > 0)
+        rotation = 1;
+    else if (sgn(CountPlambda(x0, pLambda)) > 0 && sgn(CountPlambda(x1, pLambda)) < 0)
+        rotation = -1;
+    else
+        return 0;
+        
+    double delta_k = (x1 - x0) / 2;
+    double x_k = (x0 + x1) / 2;
+    int iterations = 0;
+
+    while (delta_k > border) {
+        delta_k /= 2;
+        x_k -= delta_k * sgn(CountPlambda(x_k, pLambda)) * rotation;
+        ++iterations;
+        
+    }
+
+    x = x_k;
+    return iterations;
+}
+
+static int NewtonMethod(double x0, double x1, double& x, const std::vector<float>& pLambda, const std::vector<float>& derivative) {
+    double x_k = x1;
+    double x_k_1 = x0;
+    int iterations = 0;
+    while (std::abs(x_k - x_k_1) > border) {
+        x_k = x_k_1;
+        x_k_1 -= CountPlambda(x_k, pLambda) / CountPlambda(x_k, derivative);
+        ++iterations;
+    }
+    x = x_k_1;
+    return iterations;
+}
+
+static std::vector<float> TakeDerivative(const std::vector<float>& polinom)
+{
+    int k = 0;
+
+    std::vector<float> derivative(polinom.size() - 1);
+
+    for (int i = 0; i < polinom.size() - 1; i++)
     {
-        derivative[i] = (i + 1) * polinom[k--];
+        derivative[i] = (polinom.size() - 1 - i) * polinom[k++];
     }
 
     return derivative;
@@ -219,7 +263,21 @@ static std::vector<double> solveCubicEquation(double p1, double p2, double p3) {
 
 int main()
 {
-    auto frobenius = Solve();
+    auto pLambda = GetPlambda();
+    auto derivative = TakeDerivative(pLambda);
 
+    double x1,x2,x3,x4;
+
+    auto it1 = DichotomyMethod(-70, -60, x1, pLambda);
+    auto it2 = DichotomyMethod(30, 40, x2, pLambda);
+
+    auto it3 = NewtonMethod(-70, -60, x3, pLambda, derivative);
+    auto it4 = NewtonMethod(30, 40, x4, pLambda, derivative);
+
+    std::cout << "Dichotomy it = " << it1 << "; x1(infinity) = " << x1 << std::endl;
+    std::cout << "Dichotomy it = " << it2 << "; x2(infinity) = " << x2 << std::endl;
+
+    std::cout << "Newton it = " << it3 << "; x1(infinity) = " << x3 << std::endl;
+    std::cout << "Newton it = " << it4 << "; x2(infinity) = " << x4 << std::endl;
     
 }
