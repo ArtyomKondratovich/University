@@ -1,6 +1,9 @@
 using lab_1_.HelpClasses;
 using OxyPlot;
+using OxyPlot.Legends;
 using OxyPlot.Series;
+using System.Drawing;
+using System.Text;
 
 namespace lab_1_
 {
@@ -14,35 +17,202 @@ namespace lab_1_
             _functions = new Function(new MyRange(-3, 3));
         }
 
-        private void SetDefaultFunctions()
+        public LineSeries CalculatePn(int n, int type)
         {
-            
+            var name = type switch
+            {
+                1 => $"P1",
+                2 => $"P2",
+                _ => throw new NotSupportedException()
+            };
+
+            var result = CalculatePolynomial(type, n, 1);
+            var table = GetErrorTable(type, name, 1);
+
+            var stringBuilder = new StringBuilder();
+
+            foreach (var line in table)
+            {
+                stringBuilder.AppendLine(line);
+            }
+
+            Pn.Text = stringBuilder.ToString();
+
+            var line1 = new LineSeries()
+            {
+                Title = name,
+                Color = OxyColors.Blue,
+                StrokeThickness = 1,
+                MarkerSize = 2,
+                MarkerType = MarkerType.Circle
+            };
+
+            foreach (var item in result.First)
+            {
+                line1.Points.Add(new DataPoint(item.First, item.Second));
+            }
+
+            return line1;
         }
 
-        public void CalculatePn(int n, int number)
+        public LineSeries CalculateCn(int n, int type)
         {
-            var function = number switch
+            var name = type switch
+            {
+                1 => $"C1",
+                2 => $"C2",
+                _ => throw new NotSupportedException()
+            };
+
+            var result = CalculatePolynomial(type, n, 2);
+            var table = GetErrorTable(type, name, 2);
+
+            var stringBuilder = new StringBuilder();
+
+            foreach (var line in table)
+            {
+                stringBuilder.AppendLine(line);
+            }
+
+            Cn.Text = stringBuilder.ToString();
+
+            var line1 = new LineSeries()
+            {
+                Title = name,
+                Color = OxyColors.Red,
+                StrokeThickness = 1,
+                MarkerSize = 2,
+                MarkerType = MarkerType.Circle
+            };
+
+            foreach (var item in result.First)
+            {
+                line1.Points.Add(new DataPoint(item.First, item.Second));
+            }
+
+            return line1;
+        }
+
+        private void PrintReport(int n, int type)
+        {
+            var pn = CalculatePn(n, type);
+            var cn = CalculateCn(n, type);
+
+            var function = type switch
             {
                 1 => _functions.F1,
                 2 => _functions.F2,
                 _ => throw new NotSupportedException()
             };
 
-            var name = number switch
+            var myModel = new PlotModel { Title = "" };
+
+            myModel.Legends.Add(new Legend()
             {
-                1 => "f1(x)",
-                2 => "f2(x)",
+                LegendTitle = "",
+                LegendPosition = LegendPosition.RightTop
+            });
+            myModel.Series.Add(new FunctionSeries(function, _functions.Range.A, _functions.Range.B, 0.001));
+            myModel.Series.Add(pn);
+            myModel.Series.Add(cn);
+            plotView1.Model = myModel;
+        }
+
+        private void Button1_Click(object sender, EventArgs e)
+        {
+            if (f1.Checked)
+            {
+                if (int.TryParse(textBox1.Text, out var n))
+                {
+                    PrintReport(n, 1);
+                }
+                else
+                {
+                    textBox1.Text = "Wrong number!";
+                }
+
+            }
+
+            if (f2.Checked)
+            {
+                if (int.TryParse(textBox1.Text, out var n))
+                {
+                    PrintReport(n, 2);
+                }
+                else
+                {
+                    textBox1.Text = "Wrong number!";
+                }
+            }
+        }
+
+        private void F1_CheckedChanged(object sender, EventArgs e)
+        {
+            if (f1.Checked)
+            {
+                f2.Checked = false;
+            }
+            else
+            {
+                f2.Checked = true;
+            }
+        }
+
+        private void F2_CheckedChanged(object sender, EventArgs e)
+        {
+            if (f2.Checked)
+            {
+                f1.Checked = false;
+            }
+            else
+            {
+                f1.Checked = true;
+            }
+        }
+
+        private string[] GetErrorTable(int type, string polynomial, int knotsType)
+        {
+            var result = new List<string>();
+
+            for (var i = 3; i <= 30; i++)
+            {
+                var pair = CalculatePolynomial(type, i, knotsType);
+
+                var max = 0.0;
+
+                for (var j = 0; j < pair.First.Count; j++)
+                {
+                    max = Math.Max(Math.Abs(pair.First[j].Second - pair.Second[j]), max);
+                }
+
+                result.Add($"n = {i}: max|{polynomial} - f{type}| = {max}");
+
+            }
+
+            return [.. result];
+        }
+
+        private Pair<List<Pair<double, double>>, List<double>> CalculatePolynomial(int type, int n, int knotsType)
+        {
+            var knots = knotsType switch 
+            {
+                1 => _functions.Range.GetEquidistantKnots(n),
+                2 => _functions.Range.GetChebyshevKnots(n),
                 _ => throw new NotSupportedException()
             };
 
-            var knots = _functions.Range.GetEquidistantKnots(n);
-            var f = knots.Select(x => function(x)).ToList();
+            var function = type switch 
+            {
+                1 => _functions.F1,
+                2 => _functions.F2,
+                _ => throw new NotSupportedException()
+            };
 
-            var matrix = new double[n + 1,n + 1];
+            var matrix = new double[n + 1, n + 1];
 
             for (var i = 0; i < n + 1; i++)
             {
-                matrix[0, i] = f[i];
+                matrix[0, i] = function(knots[i]);
             }
 
 
@@ -55,10 +225,11 @@ namespace lab_1_
             }
 
 
-            var pairs = new List<Pair<double, double>>();
-            var dots = _functions.Range.GenerateDots();
+            var polynomialValues = new List<Pair<double, double>>();
+            var points = _functions.Range.GetPoints();
+            var accurateValues = new List<double>();
 
-            foreach (var dot in dots)
+            foreach (var point in points)
             {
                 var sum = 0.0;
 
@@ -68,62 +239,18 @@ namespace lab_1_
 
                     for (var j = 0; j < i; j++)
                     {
-                        temp *= (dot - knots[j]);
+                        temp *= (point - knots[j]);
                     }
 
                     sum += temp;
                 }
 
-                pairs.Add(new Pair<double, double>(dot, sum));
+                polynomialValues.Add(new Pair<double, double>(point, sum));
+                accurateValues.Add(function(point));
             }
 
-            DrawLines(pairs, OxyColors.Red, name, function);
-        }
-
-        public void CalculateCn(int n, int number)
-        {
-        
-        }
-
-        private void DrawLines(List<Pair<double, double>> values, OxyColor color, string name, Func<double, double> function)
-        {
-            var line1 = new LineSeries()
-            {
-                Title = name,
-                Color = color,
-                StrokeThickness = 1,
-                MarkerSize = 2,
-                MarkerType = MarkerType.Circle
-            };
-
-            foreach (var item in values)
-            {
-                line1.Points.Add(new DataPoint(item.First, item.Second));
-            }
-
-            var myModel = new PlotModel { Title = "" };
-            myModel.Series.Add(new FunctionSeries(function, _functions.Range.A, _functions.Range.B, 0.001));
-            myModel.Series.Add(line1);
-            plotView1.Model = myModel;
-        }
-
-        private void Button1_Click(object sender, EventArgs e)
-        {
-            if (f1.Checked)
-            {
-                f2.CheckState = CheckState.Unchecked;
-
-                CalculatePn(3, 1);
-
-
-            }
-
-            if (f2.Checked) 
-            {
-                f1.CheckState = CheckState.Unchecked;
-
-                CalculatePn(3, 2);
-            }
+            return new Pair<List<Pair<double, double>>, List<double>>(polynomialValues, accurateValues);
+            
         }
     }
 
