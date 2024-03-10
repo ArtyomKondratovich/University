@@ -2,8 +2,8 @@
 {
     public class MyRange
     {
-        public double A;
-        public double B;
+        public double A { get; set; }
+        public double B { get; set; }
 
         public MyRange(double a, double b)
         {
@@ -35,13 +35,13 @@
 
             for (int i = 0; i <= n; i++)
             {
-                knots.Add((A + B) / 2 + ((B - A) / 2) * Math.Cos(Math.PI * (2 * i + 1) / (2 * n)));
+                knots.Add((A + B) / 2 + ((B - A) / 2) * Math.Cos(Math.PI * (2 * i + 1) / (2 * (n + 1))));
             }
 
             return knots;
         }
 
-        public List<double> GenerateDots()
+        public List<double> GetPoints()
         {
             var knots = new List<double>();
             
