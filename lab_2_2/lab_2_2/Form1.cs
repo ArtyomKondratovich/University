@@ -17,7 +17,7 @@ namespace lab_2_2
             InitializeComponent();
             _f1_0 = (x) => Math.Cos(x) * Math.Sin(x);
             _f1_1 = (x) => Math.Cos(2 * x);
-            _f1_2 = (x) => -2 * Math.Sin(2 * x);
+            _f1_2 = (x) => (-2) * Math.Sin(2 * x);
             _segment = new(-3, 3);
         }
 
@@ -63,7 +63,7 @@ namespace lab_2_2
                 errorValues.Add(Math.Abs(splineValues[i] - functionValues[i]));
             }
 
-            var maxError = errorValues.Max();
+            var maxError = errorValues.max();
 
             label1.Text = $"max|f(x)-s(x)| = {maxError}";
 
@@ -110,7 +110,7 @@ namespace lab_2_2
 
             for (var i = 1; i < n; i++)
             {
-                a.Add(h / 6);
+                a.Add(-(h / 6));
             }
 
             a.Add(0);
@@ -119,7 +119,7 @@ namespace lab_2_2
 
             for (var i = 0; i < n; i++)
             {
-                b.Add(h / 6);
+                b.Add(-(h / 6));
             }
 
             b.Add(0);
@@ -129,7 +129,7 @@ namespace lab_2_2
                 h / 3
             };
 
-            for (var i = 0; i < n - 1; i++)
+            for (var i = 1; i < n; i++)
             {
                 c.Add(2 * h / 3);
             }
@@ -303,6 +303,18 @@ namespace lab_2_2
         private void label1_Click(object sender, EventArgs e)
         {
 
+        }
+
+        public static double MaxError(List<double> points)
+        {
+            var max = 0.0;
+
+            foreach (var point in points) 
+            {
+                max = Math.Max(max, point / 10); 
+            }
+
+            return max;
         }
     }
 }

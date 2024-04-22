@@ -42,5 +42,17 @@
 
             return partitions;
         }
+
+        public static double max(this List<double> points)
+        {
+            var max = 0.0;
+
+            for (var i = 0; i < points.Count; i++) {
+                max = Math.Max(max, points[i] / 10);
+                points[i] /= 10; ;
+            }
+
+            return max;
+        }
     }
 }
