@@ -108,22 +108,24 @@
 
             if (Math.Abs(r) <= _epsilon)
             {
+                PrintTable(type, 2 * n, (A + B) / n, q1, r);
                 return q2 + (int)r;
             }
             else 
             {
-                PrintTable(type, n, (A + B) / n, q1, r, double.NaN);
+                PrintTable(type, 2 * n, (A + B) / n, q1, r);
                 return Runge(qf, m, 2 * n, type);
             }
 
         }
 
-        public static void PrintTable(int type, int n, double h, double qh, double r, double error)
+        public static void PrintTable(int type, int n, double h, double qh, double r)
         {
             var kf = type switch
             {
                 1 => "СКФСП",
-                2 => "СКФС"
+                2 => "СКФС",
+                _ => throw new NotSupportedException()
             };
 
             Console.WriteLine("{0,-5}{1,-5}{2,-10}{3,-10}{4,-10}{5,-10}{6,-10}{7,-10}{8,-10}",
