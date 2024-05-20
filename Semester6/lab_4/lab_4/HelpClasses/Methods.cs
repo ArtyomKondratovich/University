@@ -41,10 +41,10 @@
                 double uiPrev = u[i - 1];
 
                 double k1 = h * f(xi, uiPrev);
-                double k2 = h * f(xi + h / 2, uiPrev + k1 / 2);
-                double k3 = h * f(xi + h, uiPrev - k1 + 2 * k2);
+                double k2 = h * f(xi + h / 3, uiPrev + k1 / 3);
+                double k3 = h * f(xi + 2 * h / 3, uiPrev + 2 * k2 / 3);
 
-                double deltaUi = (k1 + 4 * k2 + k3) / 6;
+                double deltaUi = (k1  + 3 * k3) / 4;
                 u[i] = uiPrev + deltaUi;
             }
 
@@ -66,16 +66,16 @@
                 u[i + 1] = initialU[i];
             }
 
-            for (int i = 3; i < x.Length; i++)
+            for (int i = 2; i < x.Length; i++)
             {
                 double xi = x[i - 1];
                 double uiPrev = u[i - 1];
 
                 // Predictor step using Adams-Bashforth 3rd order
-                double predictor = uiPrev + (h / 12) * (23 * f(xi, uiPrev) - 16 * f(xi - h, u[i - 2]) + 5 * f(xi - 2 * h, u[i - 3]));
+                double predictor = uiPrev + (h / 12) * (23 * f(xi, uiPrev) - 16 * f(xi - h, u[i - 1]) + 5 * f(xi - 2 * h, u[i - 2]));
 
                 // Corrector step using Adams-Moulton 3rd order
-                double corrector = uiPrev + (h / 12) * (5 * f(xi + h, predictor) + 8 * f(xi, uiPrev) - f(xi - h, u[i - 2]));
+                double corrector = uiPrev + (h / 12) * (5 * f(xi + h, predictor) + 8 * f(xi, uiPrev) - f(xi - h, u[i - 1]));
 
                 u[i] = corrector;
             }
