@@ -56,17 +56,15 @@
             var x = GetNodes(a, b, h).ToArray();
 
             double[] u = new double[x.Length];
-            u[0] = u0;
-
 
             double[] initialU = SolveRungeKutta(f, a, a + 2 * h, h, u0).ToArray();
 
             for (int i = 0; i < initialU.Length; i++)
             {
-                u[i + 1] = initialU[i];
+                u[i] = initialU[i];
             }
 
-            for (int i = 2; i < x.Length; i++)
+            for (int i = 3; i < x.Length; i++)
             {
                 double xi = x[i - 1];
                 double uiPrev = u[i - 1];
