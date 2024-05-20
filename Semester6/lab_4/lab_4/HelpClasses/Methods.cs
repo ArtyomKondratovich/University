@@ -96,11 +96,10 @@
         public static double ErrorEstimateByRunge(int order, double[] y1, double[] y2)
         {
             var max = 0.0;
-            var j = 0;
 
-            for (var i = 0; i < y2.Length; i++, j += 2)
+            for (var i = 0; i < y2.Length; i++)
             {
-                max = Math.Max(Math.Abs(y1[j] - y2[i]), max);
+                max = Math.Max(Math.Abs(y1[2 * i] - y2[i]), max);
             }
 
             return max / (Math.Pow(2, order) - 1);
